@@ -4,17 +4,18 @@
 
 int main() {
 
-  KVStore store("wal.log");
-  
-  std::ofstream wal("wal.log");
-  wal << "PUT 3 5 abc";
-  wal.flush();
-  
-  bool r=store.recover();
-//  
-  std::cout << "main.cpp -- " << r << std::endl;
+    std::string wal_file;
+    wal_file = "wal.log";
 
-  
+    
+    KVStore store(wal_file);
+    store.put("3", "4");
+store.del("3");
+
+dump_wal_bytes("wal.log");
+    
+
+
   return 0;
 
 }
