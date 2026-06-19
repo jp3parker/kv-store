@@ -3,7 +3,7 @@
 
 class KVStoreTest : public ::testing::Test {
 protected:
-    std::string wal_file = "test.wal";
+    std::string wal_file = "data/test.wal";
 
     void SetUp() override {
         std::remove(wal_file.c_str());
@@ -92,7 +92,7 @@ TEST_F(KVStoreTest, RecoverBinaryValue) {
         store.put("blob", value);
     }
     KVStore recovered(wal_file);
-    ASSERT_TRUE(recovered.recover());
+    EXPECT_EQ(recovered.recover(), RecoveryResult::Success);
     EXPECT_EQ(recovered.get("blob"), value);
 }
 
@@ -129,7 +129,7 @@ TEST_F(KVStoreTest, GetMissingKey) {
 
 TEST_F(KVStoreTest, RecoverEmptyWal) {
     KVStore store(wal_file);
-    EXPECT_TRUE(store.recover());
+    EXPECT_EQ(store.recover(), RecoveryResult::Success);
 }
 
 TEST_F(KVStoreTest, RecoverPut) {
@@ -246,8 +246,8 @@ TEST_F(KVStoreTest, RecoverTwice) {
         store.put("b", "2");
     }
     KVStore store(wal_file);
-    ASSERT_TRUE(store.recover());
-    ASSERT_TRUE(store.recover());
+    EXPECT_EQ(store.recover(), RecoveryResult::Success);
+    EXPECT_EQ(store.recover(), RecoveryResult::Success);
     EXPECT_EQ(store.get("a"), "1");
     EXPECT_EQ(store.get("b"), "2");
 }
@@ -258,7 +258,7 @@ TEST_F(KVStoreTest, PutAfterRecovery) {
         store.put("a", "1");
     }
     KVStore store(wal_file);
-    ASSERT_TRUE(store.recover());
+    EXPECT_EQ(store.recover(), RecoveryResult::Success);
     store.put("b", "2");
     EXPECT_EQ(store.get("a"), "1");
     EXPECT_EQ(store.get("b"), "2");
@@ -270,7 +270,7 @@ TEST_F(KVStoreTest, RecoveryAfterPutAfterRecovery) {
         store.put("a", "1");
     }
     KVStore store(wal_file);
-    ASSERT_TRUE(store.recover());
+    EXPECT_EQ(store.recover(), RecoveryResult::Success);
     store.put("b", "2");
     EXPECT_EQ(store.get("a"), "1");
     EXPECT_EQ(store.get("b"), "2");
@@ -298,8 +298,7 @@ TEST_F(KVStoreTest, FuzzRecovery) {
         {
             KVStore store(wal_file);
             for (int i = 0; i < 500; i++) {
-                std::string key =
-                    std::string(1, char(rand() % 128));
+                std::string key = std::string(1, char(rand() % 128));
                 std::string value;
                 int len = rand() % 50;
                 for (int j = 0; j < len; j++) {
@@ -316,9 +315,51 @@ TEST_F(KVStoreTest, FuzzRecovery) {
             }
         }
         KVStore recovered(wal_file);
-        ASSERT_TRUE(recovered.recover());
+        EXPECT_EQ(recovered.recover(), RecoveryResult::Success);
         for (auto& [k,v] : oracle)
             EXPECT_EQ(recovered.get(k), v);
         oracle.clear();
     }
+}
+
+TEST_F(KVStoreTest, CompactRemovesOldVersions)
+{
+    {
+        KVStore store(wal_file);
+
+        store.put("a", "1");
+        store.put("a", "2");
+        store.put("a", "3");
+        store.put("b", "x");
+
+        store.compact();
+    }
+
+    KVStore recovered(wal_file);
+
+    ASSERT_EQ(recovered.recover(), RecoveryResult::Success);
+
+    EXPECT_EQ(recovered.get("a"), "3");
+    EXPECT_EQ(recovered.get("b"), "x");
+}
+
+
+TEST_F(KVStoreTest, CompactShrinksWal)
+{
+    size_t before;
+
+    {
+        KVStore store(wal_file);
+
+        for (int i = 0; i < 100; i++)
+            store.put("counter", std::to_string(i));
+
+        before = std::filesystem::file_size(wal_file);
+
+        store.compact();
+    }
+
+    size_t after = std::filesystem::file_size(wal_file);
+
+    EXPECT_LT(after, before);
 }

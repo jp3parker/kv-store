@@ -27,6 +27,7 @@ Testing/
 *.dylib
 *.a
 *.lib
+/kv_store
 
 # IDEs
 .vscode/

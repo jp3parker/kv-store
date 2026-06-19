@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <cstdint>
+#include "status.h"
 
 class KVStore {
 public:
@@ -13,14 +14,17 @@ public:
     std::string get(const std::string& key);
     void del(const std::string& key);
     
-    bool recover();
+    RecoveryResult recover();
+    void compact();
+    
 private:
     std::unordered_map<std::string, std::string> map_;
     std::ofstream wal_;
     std::string wal_file_;
+    std::string tmp_name = "temp-wal.log";
     
-    //bool process_record(std::ifstream& wal_stream, const std::string& op);
-    bool process_record(std::ifstream& wal_stream, uint8_t op);
+    RecoveryResult process_record(std::ifstream& wal_stream, uint8_t op);
+    void write_put_record(std::ostream& out,const std::string& key,const std::string& value);
     
     static constexpr size_t DEFAULT_MAX_KEY_SIZE = 1024;          // 1 KB
     static constexpr size_t DEFAULT_MAX_VALUE_SIZE = 16 * 1024 * 1024; // 16 MB

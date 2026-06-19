@@ -16,9 +16,12 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(kv_tests
-    kv_store.cpp
-    test_kv_store.cpp
+    tests/test_kv_store.cpp
+    src/kv_store.cpp
+    src/wal.cpp
 )
+
+target_include_directories(kv_tests PRIVATE include)
 
 target_link_libraries(kv_tests
     gtest
