@@ -5,6 +5,9 @@
 #include <fstream>
 #include <cstdint>
 #include "status.h"
+#include "wal_record.h"
+#include "wal_serializer.h"
+#include "wal_parser.h"
 
 class KVStore {
 public:
@@ -22,15 +25,8 @@ private:
     std::ofstream wal_;
     std::string wal_file_;
     std::string tmp_name;
+    void apply_record(const WALRecord& record);
     
-    RecoveryResult process_record(std::ifstream& wal_stream, uint8_t op);
-    void write_put_record(std::ostream& out,const std::string& key,const std::string& value);
-    
-    static constexpr size_t DEFAULT_MAX_KEY_SIZE = 1024;          // 1 KB
-    static constexpr size_t DEFAULT_MAX_VALUE_SIZE = 16 * 1024 * 1024; // 16 MB
-    
-    static constexpr uint8_t OP_PUT = 1;
-    static constexpr uint8_t OP_DEL = 2;
 };
 
 

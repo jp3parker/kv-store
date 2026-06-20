@@ -19,7 +19,10 @@ add_executable(kv_tests
     tests/test_kv_store.cpp
     tests/test_crc32.cpp
     src/kv_store.cpp
-    src/wal.cpp
+    src/crc32.cpp
+    src/wal_parser.cpp
+    src/wal_serializer.cpp
+    src/wal_record.cpp
     src/crc32.cpp
 )
 

@@ -1,4 +1,6 @@
 
+#pragma once
+
 enum class RecoveryResult {
     Success,
     Truncated,

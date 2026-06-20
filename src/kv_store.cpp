@@ -7,125 +7,63 @@ KVStore::KVStore(const std::string& wal_file) : wal_file_(wal_file) {
 }
 
 void KVStore::put(const std::string& key, const std::string& value) {
-
-    write_put_record(wal_, key, value);
+    WALSerializer::write_record(wal_, WALRecord::Put(key, value));
     wal_.flush();
-
     map_[key] = value;
 }
 
-void KVStore::write_put_record(std::ostream& out, const std::string& key, const std::string& value) {
-    uint8_t op = OP_PUT;
-
-    uint32_t key_size = static_cast<uint32_t>(key.size());
-    uint32_t value_size = static_cast<uint32_t>(value.size());
-
-    out.write(reinterpret_cast<char*>(&op), sizeof(op));
-    out.write(reinterpret_cast<char*>(&key_size), sizeof(key_size));
-    out.write(reinterpret_cast<char*>(&value_size), sizeof(value_size));
-
-    out.write(key.data(), key.size());
-    out.write(value.data(), value.size());
-
-}
 
 std::string KVStore::get(const std::string& key) {
-    if (map_.find(key) == map_.end()) {
+    auto it = map_.find(key);
+    if (it == map_.end()) {
         return "";
     }
-    return map_[key];
+    return it->second;
 }
 
 void KVStore::del(const std::string& key) {
-
-    uint8_t op = OP_DEL;
-    
-    uint32_t key_size = static_cast<uint32_t>(key.size());
-    
-    wal_.write(reinterpret_cast<char*>(&op), sizeof(op));
-    wal_.write(reinterpret_cast<char*>(&key_size), sizeof(key_size));
-    
-    wal_.write(key.data(), key.size());
+    WALSerializer::write_record(wal_, WALRecord::Delete(key));
     wal_.flush();
-    
     map_.erase(key);
+
 }
 
 RecoveryResult KVStore::recover() {
-
     map_.clear();
-
     std::ifstream wal_stream(wal_file_, std::ios::binary);
+    WALRecord record;
+    while (true) {
+        RecoveryResult result = WALParser::read_record(wal_stream, record);
 
-    uint8_t op;
-    RecoveryResult recovery_ok = RecoveryResult::Success;
+        // EOF
+        if (result == RecoveryResult::Success &&
+            wal_stream.eof())
+            return RecoveryResult::Success;
 
-    while (wal_stream.read(reinterpret_cast<char*>(&op), sizeof(op)) and
-           recovery_ok == RecoveryResult::Success) {
-        recovery_ok = process_record(wal_stream, op);
+        if (result != RecoveryResult::Success)
+            return result;
+
+        apply_record(record);
     }
-
-    return recovery_ok;
 }
 
-RecoveryResult KVStore::process_record(std::ifstream& wal_stream, uint8_t op) {
-    RecoveryResult valid_record = RecoveryResult::Success;
-    
-    if (op == OP_PUT) {
-        uint32_t ksz;
-        uint32_t vsz;
 
-        wal_stream.read(reinterpret_cast<char*>(&ksz), sizeof(ksz));
-        wal_stream.read(reinterpret_cast<char*>(&vsz), sizeof(vsz));
-
-        if (!wal_stream or ksz > DEFAULT_MAX_KEY_SIZE or vsz > DEFAULT_MAX_VALUE_SIZE) {
-            valid_record = RecoveryResult::ReadError;
+void KVStore::apply_record(const WALRecord& record) {
+    switch (record.op) {
+        case WALRecord::Operation::Put: {
+            map_[record.key] = record.value;
+            break;
         }
-        else {
-            std::string key(ksz, '\0');
-            std::string value(vsz, '\0');
-
-            wal_stream.read(&key[0], ksz);
-            wal_stream.read(&value[0], vsz);
-            
-            if (!wal_stream) {
-                valid_record = RecoveryResult::Truncated;
-            }
-            else {
-                map_[key] = value;
-            }
+        case WALRecord::Operation::Delete:
+            map_.erase(record.key);
+            break;
         }
-    }
-    else if (op == OP_DEL) {
-        uint32_t ksz;
-
-        wal_stream.read(reinterpret_cast<char*>(&ksz), sizeof(ksz));
-
-        if (!wal_stream or ksz > DEFAULT_MAX_KEY_SIZE) {
-            valid_record = RecoveryResult::ReadError;
-        }
-        else {
-            std::string key(ksz, '\0');
-            wal_stream.read(&key[0], ksz);
-            
-            if (!wal_stream) {
-                valid_record = RecoveryResult::Truncated;
-            }
-            else {
-                map_.erase(key);
-            }
-        }
-    }
-    else { // UNRECOGNIZED OP
-        valid_record = RecoveryResult::InvalidOperation;
-    }
-    return valid_record;
 }
 
 void KVStore::compact() {
     std::ofstream temp(tmp_name, std::ios::binary);
-    for (auto& [k,v] : map_) {
-        write_put_record(temp, k, v);
+    for (const auto& [k,v] : map_) {
+        WALSerializer::write_record(temp, WALRecord::Put(k, v));
     }
     temp.close();
     wal_.close();
