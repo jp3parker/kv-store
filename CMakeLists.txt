@@ -17,8 +17,10 @@ enable_testing()
 
 add_executable(kv_tests
     tests/test_kv_store.cpp
+    tests/test_crc32.cpp
     src/kv_store.cpp
     src/wal.cpp
+    src/crc32.cpp
 )
 
 target_include_directories(kv_tests PRIVATE include)

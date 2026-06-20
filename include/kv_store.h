@@ -21,7 +21,7 @@ private:
     std::unordered_map<std::string, std::string> map_;
     std::ofstream wal_;
     std::string wal_file_;
-    std::string tmp_name = "temp-wal.log";
+    std::string tmp_name;
     
     RecoveryResult process_record(std::ifstream& wal_stream, uint8_t op);
     void write_put_record(std::ostream& out,const std::string& key,const std::string& value);
