@@ -2,6 +2,7 @@
 
 KVStore::KVStore(const std::string& wal_file) : wal_file_(wal_file) {
     std::filesystem::create_directories(std::filesystem::path(wal_file).parent_path());
+    tmp_name = std::filesystem::path(wal_file_).parent_path() / "temp-wal.log";
     wal_.open(wal_file_, std::ios::binary | std::ios::app);
 }
 
