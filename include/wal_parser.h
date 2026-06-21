@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include <istream>
-
+#include <iostream>
 #include "status.h"
 #include "wal_record.h"
+#include "crc32.h"
 
 class WALParser {
 public:

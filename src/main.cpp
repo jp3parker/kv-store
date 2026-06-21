@@ -1,37 +1,38 @@
 
 #include <iostream>
+#include <sstream>
 #include "kv_store.h"
 
 int main() {
 
+    std::string wal_file = "data/wal.log";
+        
+    std::stringstream ss(std::ios::in |
+                     std::ios::out |
+                     std::ios::binary);
 
-    
-    std::string wal_file = "data/tempwal.log";
-    KVStore store(wal_file);
+    WALSerializer::write_record(
+        ss,
+        WALRecord::Put("abcdef", "123456"));
 
-    store.put("a", "1");
-    store.put("a", "2");
-    store.put("a", "3");
-    store.put("b", "x");
+    std::string bytes = ss.str();
 
+    bytes.pop_back();      // simulate crash during write
 
-    
-    
-    
-    store.compact();
-    KVStore recovered(wal_file);
-    
-    dump_wal_bytes("data/tempwal.log");
-    
-    std::cout << "recovered.recover() = " << static_cast<int>(recovered.recover()) << std::endl;
-    std::cout << "EXPECT_EQ(recovered.get(\"a\"), \"3\")" << recovered.get("a") << std::endl;
-//    EXPECT_EQ(recovered.get("b"), "x");
-//    EXPECT_EQ(recovered.get("b"), "x");
+    std::stringstream truncated(bytes,
+        std::ios::binary);
 
-//    ASSERT_EQ(recovered.recover(), RecoveryResult::Success);
-//
-//    EXPECT_EQ(recovered.get("a"), "3");
-//    EXPECT_EQ(recovered.get("b"), "x");
+    WALRecord record;
+    
+    std::cout << "WALParser::read_record(truncated, record) = " << static_cast<int>(WALParser::read_record(truncated, record)) << std::endl;
+    
+    std::cout << "RecoveryResult::Truncated = " << static_cast<int>(RecoveryResult::Truncated) << std::endl;
+    
+
+//    EXPECT_EQ(
+//        WALParser::read_record(truncated, record),
+//        RecoveryResult::Truncated);
+    
 
 
     return 0;

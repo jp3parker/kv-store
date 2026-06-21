@@ -6,5 +6,6 @@ enum class RecoveryResult {
     Truncated,
     Corrupt,
     ReadError,
-    InvalidOperation
+    InvalidOperation,
+    ChecksumMismatch
 };

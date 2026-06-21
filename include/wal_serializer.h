@@ -1,8 +1,10 @@
 
 #pragma once
 
+#include <cstdint>
 #include <ostream>
 #include "wal_record.h"
+#include "crc32.h"
 
 class WALSerializer {
 public:

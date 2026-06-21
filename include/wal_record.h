@@ -19,3 +19,4 @@ struct WALRecord {
     static WALRecord Put(std::string key, std::string value);
     static WALRecord Delete(std::string key);
 };
+

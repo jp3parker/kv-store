@@ -18,3 +18,5 @@ WALRecord WALRecord::Delete(std::string key) {
     };
     return record;
 }
+
+
