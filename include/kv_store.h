@@ -14,8 +14,8 @@ public:
     KVStore(const std::string& wal_file);
 
     void put(const std::string& key, const std::string& value);
-    std::string get(const std::string& key);
     void del(const std::string& key);
+    std::string get(const std::string& key);
     
     RecoveryResult recover();
     void compact();

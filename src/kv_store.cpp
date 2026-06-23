@@ -12,6 +12,12 @@ void KVStore::put(const std::string& key, const std::string& value) {
     map_[key] = value;
 }
 
+void KVStore::del(const std::string& key) {
+    WALSerializer::write_record(wal_, WALRecord::Delete(key));
+    wal_.flush();
+    map_.erase(key);
+
+}
 
 std::string KVStore::get(const std::string& key) {
     auto it = map_.find(key);
@@ -19,13 +25,6 @@ std::string KVStore::get(const std::string& key) {
         return "";
     }
     return it->second;
-}
-
-void KVStore::del(const std::string& key) {
-    WALSerializer::write_record(wal_, WALRecord::Delete(key));
-    wal_.flush();
-    map_.erase(key);
-
 }
 
 RecoveryResult KVStore::recover() {
