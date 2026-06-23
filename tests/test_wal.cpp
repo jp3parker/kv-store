@@ -250,10 +250,14 @@ TEST(WALTest, InvalidOpcodeReturnsInvalidOperation)
                      std::ios::binary);
 
     uint32_t checksum = 0;
+    uint64_t lsn = 99;
     uint8_t opcode = 99;
 
     ss.write(reinterpret_cast<char*>(&checksum),
              sizeof(checksum));
+
+    ss.write(reinterpret_cast<char*>(&lsn),
+             sizeof(lsn));
 
     ss.write(reinterpret_cast<char*>(&opcode),
              sizeof(opcode));

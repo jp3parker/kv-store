@@ -2,12 +2,12 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <fstream>
 #include <cstdint>
 #include "status.h"
 #include "wal_record.h"
 #include "wal_serializer.h"
 #include "wal_parser.h"
+#include "wal.h"
 
 class KVStore {
 public:
@@ -22,12 +22,10 @@ public:
     
 private:
     std::unordered_map<std::string, std::string> map_;
-    std::ofstream wal_;
-    std::string wal_file_;
-    std::string tmp_name;
+    WAL wal_;
+    
     void apply_record(const WALRecord& record);
     
 };
-
 
 void dump_wal_bytes(const std::string& filename);

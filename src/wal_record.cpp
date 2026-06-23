@@ -3,9 +3,9 @@
 
 WALRecord WALRecord::Put(std::string key, std::string value) {
     WALRecord record{
-        WALRecord::Operation::Put,
-        key,
-        value
+        .op = WALRecord::Operation::Put,
+        .key = key,
+        .value = value
     };
     return record;
 }
@@ -13,8 +13,8 @@ WALRecord WALRecord::Put(std::string key, std::string value) {
 
 WALRecord WALRecord::Delete(std::string key) {
     WALRecord record{
-        WALRecord::Operation::Delete,
-        key
+        .op = WALRecord::Operation::Delete,
+        .key = key
     };
     return record;
 }

@@ -6,34 +6,22 @@
 int main() {
 
     std::string wal_file = "data/wal.log";
-        
-    std::stringstream ss(std::ios::in |
-                     std::ios::out |
-                     std::ios::binary);
-
-    WALSerializer::write_record(
-        ss,
-        WALRecord::Put("abcdef", "123456"));
-
-    std::string bytes = ss.str();
-
-    bytes.pop_back();      // simulate crash during write
-
-    std::stringstream truncated(bytes,
-        std::ios::binary);
-
-    WALRecord record;
     
-    std::cout << "WALParser::read_record(truncated, record) = " << static_cast<int>(WALParser::read_record(truncated, record)) << std::endl;
+        KVStore store(wal_file);
+        store.put("a", "1");
+        store.del("a");
     
-    std::cout << "RecoveryResult::Truncated = " << static_cast<int>(RecoveryResult::Truncated) << std::endl;
     
-
-//    EXPECT_EQ(
-//        WALParser::read_record(truncated, record),
-//        RecoveryResult::Truncated);
+    KVStore recovered(wal_file);
+    recovered.recover();
     
-
+    std::cout << "recovered.get(\"a\") = " << recovered.get("a") << std::endl;
+    
+    
+//    std::cout << "recovered.recover() = " << static_cast<int>(recovered.recover()) << std::endl;
+//    std::cout << "RecoveryResult::Success = " << static_cast<int>(RecoveryResult::Success) << std::endl;
+//    EXPECT_EQ(recovered.recover(), RecoveryResult::Success);
+//    EXPECT_EQ(recovered.get("blob"), value);
 
     return 0;
 

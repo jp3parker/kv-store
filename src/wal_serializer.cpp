@@ -34,6 +34,7 @@ void WALSerializer::write_put(std::ostream& out, const WALRecord& record)
     uint32_t value_size = static_cast<uint32_t>(record.value.size());
 
     // Build the payload.
+    append_bytes(payload, record.lsn); // stored as 64-bit by wal_record.h already
     append_bytes(payload, op);
     append_bytes(payload, key_size);
     append_bytes(payload, value_size);
@@ -63,6 +64,7 @@ void WALSerializer::write_delete(std::ostream& out, const WALRecord& record)
     uint8_t op = static_cast<uint8_t>(record.op);
     uint32_t key_size = static_cast<uint32_t>(record.key.size());
 
+    append_bytes(payload, record.lsn); // stored as 64-bit by wal_record.h already
     append_bytes(payload, op);
     append_bytes(payload, key_size);
 

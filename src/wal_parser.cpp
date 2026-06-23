@@ -18,6 +18,11 @@ RecoveryResult WALParser::read_record(std::istream& in, WALRecord& record)
     if (!in.read(reinterpret_cast<char*>(&stored_checksum), sizeof(stored_checksum))) {
         return RecoveryResult::Success;
     }
+    
+    uint64_t lsn;
+    if (!in.read(reinterpret_cast<char*>(&lsn), sizeof(lsn))) {
+        return RecoveryResult::Truncated;
+    }
 
     uint8_t op;
     if (!in.read(reinterpret_cast<char*>(&op), sizeof(op))) {
@@ -45,6 +50,7 @@ RecoveryResult WALParser::read_record(std::istream& in, WALRecord& record)
               return RecoveryResult::ReadError;
           }
           
+          record.lsn = lsn;
           record.op = WALRecord::Operation::Put;
           record.key.resize(ksz);
           record.value.resize(vsz);
@@ -56,6 +62,7 @@ RecoveryResult WALParser::read_record(std::istream& in, WALRecord& record)
               return RecoveryResult::Truncated;
           }
         
+          append_bytes(payload, lsn);
           append_bytes(payload, op);
           append_bytes(payload, ksz);
           append_bytes(payload, vsz);
@@ -86,6 +93,7 @@ RecoveryResult WALParser::read_record(std::istream& in, WALRecord& record)
             return RecoveryResult::ReadError;
         }
 
+        record.lsn = lsn;
         record.op = WALRecord::Operation::Delete;
         record.key.resize(ksz);
         record.value.clear();
@@ -96,6 +104,7 @@ RecoveryResult WALParser::read_record(std::istream& in, WALRecord& record)
             return RecoveryResult::Truncated;
         }
         
+        append_bytes(payload, lsn);
         append_bytes(payload, op);
         append_bytes(payload, ksz);
         

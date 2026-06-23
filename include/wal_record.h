@@ -9,6 +9,8 @@ struct WALRecord {
         Put = 1,
         Delete = 2
     };
+    
+    uint64_t lsn = 0;
 
     Operation op;
     std::string key;
@@ -19,4 +21,3 @@ struct WALRecord {
     static WALRecord Put(std::string key, std::string value);
     static WALRecord Delete(std::string key);
 };
-
