@@ -7,9 +7,13 @@ WAL::WAL(const std::string& filename) : filename_(filename) {
     stream_.open(filename_, std::ios::binary | std::ios::app);
 }
 
-void WAL::append(WALRecord record) { //might have to change to pass by value
+void WAL::append(WALRecord record) {
+    WALSerializer::write_record(stream_, std::move(record));
+}
+
+void WAL::write_record(std::ostream& out, WALRecord record) {
     record.lsn = next_lsn_++;
-    WALSerializer::write_record(stream_, record);
+    WALSerializer::write_record(out, record);
 }
 
 RecoveryResult WAL::recover(const std::function<void(const WALRecord&)>& callback) {

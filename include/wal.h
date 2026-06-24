@@ -16,6 +16,7 @@ public:
     ~WAL();
 
     void append(WALRecord record);
+    void write_record(std::ostream& out, WALRecord record);
 
     RecoveryResult recover(const std::function<void(const WALRecord&)>& callback);
     
