@@ -25,7 +25,6 @@ add_executable(kv_tests
     src/wal_parser.cpp
     src/wal_serializer.cpp
     src/wal_record.cpp
-    src/crc32.cpp
 )
 
 target_include_directories(kv_tests PRIVATE include)

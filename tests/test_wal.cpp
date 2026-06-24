@@ -68,6 +68,24 @@ TEST_F(KVStoreTest, RecoverDetectsCorruptedDelRecord)
     EXPECT_EQ(recovered.recover(),
               RecoveryResult::ChecksumMismatch);
 }
+TEST(WALTest, TruncatedChecksumReturnsTruncated)
+{
+    std::stringstream ss(std::ios::binary | std::ios::in | std::ios::out);
+
+    WALSerializer::write_record(ss, WALRecord::Put("name", "alice"));
+
+    std::string bytes = ss.str();
+    bytes.resize(2);
+
+    std::stringstream truncated(bytes,
+        std::ios::binary | std::ios::in | std::ios::out);
+
+    WALRecord record;
+
+    EXPECT_EQ(
+        WALParser::read_record(truncated, record),
+        RecoveryResult::Truncated);
+}
 TEST(WALTest, SerializePutRoundTrips)
 {
     std::stringstream ss(std::ios::binary | std::ios::in | std::ios::out);
@@ -270,4 +288,3 @@ TEST(WALTest, InvalidOpcodeReturnsInvalidOperation)
         WALParser::read_record(ss, record),
         RecoveryResult::InvalidOperation);
 }
-

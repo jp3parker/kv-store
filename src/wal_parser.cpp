@@ -16,7 +16,10 @@ RecoveryResult WALParser::read_record(std::istream& in, WALRecord& record)
 
     uint32_t stored_checksum;
     if (!in.read(reinterpret_cast<char*>(&stored_checksum), sizeof(stored_checksum))) {
-        return RecoveryResult::Success;
+        if (in.gcount() == 0) {
+            return RecoveryResult::Success;
+        }
+        return RecoveryResult::Truncated;
     }
     
     uint64_t lsn;

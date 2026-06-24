@@ -14,10 +14,10 @@ void KVStore::del(const std::string& key) {
     map_.erase(key);
 }
 
-std::string KVStore::get(const std::string& key) {
+std::optional<std::string> KVStore::get(const std::string& key) const {
     auto it = map_.find(key);
     if (it == map_.end()) {
-        return "";
+        return std::nullopt;
     }
     return it->second;
 }
@@ -49,7 +49,7 @@ void KVStore::compact() {
         {
             for (const auto& [k, v] : map_)
             {
-                WALSerializer::write_record(out, WALRecord::Put(k, v));
+                wal_.write_record(out, WALRecord::Put(k, v));
             }
         });
 }

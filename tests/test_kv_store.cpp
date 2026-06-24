@@ -20,7 +20,7 @@ TEST_F(KVStoreTest, DeleteKey) {
     KVStore store(wal_file);
     store.put("name", "alice");
     store.del("name");
-    EXPECT_EQ(store.get("name"), "");
+    EXPECT_EQ(store.get("name"), std::nullopt);
 }
 TEST_F(KVStoreTest, DeleteMissingKey) {
     KVStore store(wal_file);
@@ -28,7 +28,7 @@ TEST_F(KVStoreTest, DeleteMissingKey) {
 }
 TEST_F(KVStoreTest, GetMissingKey) {
     KVStore store(wal_file);
-    EXPECT_EQ(store.get("missing"), "");
+    EXPECT_EQ(store.get("missing"), std::nullopt);
 }
 TEST_F(KVStoreTest, EmptyValue) {
     KVStore store(wal_file);
@@ -40,7 +40,7 @@ TEST_F(KVStoreTest, MultipleDeletes) {
     store.put("a", "1");
     store.del("a");
     store.del("a");
-    EXPECT_EQ(store.get("a"), "");
+    EXPECT_EQ(store.get("a"), std::nullopt);
 }
 TEST_F(KVStoreTest, EmptyKeyAndValue) {
     KVStore store(wal_file);
@@ -127,7 +127,7 @@ TEST_F(KVStoreTest, RecoverDelete) {
     }
     KVStore recovered(wal_file);
     recovered.recover();
-    EXPECT_EQ(recovered.get("a"), "");
+    EXPECT_EQ(recovered.get("a"), std::nullopt);
 }
 TEST_F(KVStoreTest, RecoverOverwrite) {
     {
@@ -190,7 +190,7 @@ TEST_F(KVStoreTest, DeleteAfterRecovery) {
     KVStore store(wal_file);
     store.recover();
     store.del("a");
-    EXPECT_EQ(store.get("a"), "");
+    EXPECT_EQ(store.get("a"), std::nullopt);
 }
 TEST_F(KVStoreTest, RecoverLargeValue) {
     std::string value(100000, 'x');

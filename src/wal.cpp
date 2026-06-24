@@ -1,4 +1,3 @@
-
 #include "wal.h"
 
 WAL::WAL(const std::string& filename) : filename_(filename) {
@@ -8,7 +7,7 @@ WAL::WAL(const std::string& filename) : filename_(filename) {
 }
 
 void WAL::append(WALRecord record) {
-    WALSerializer::write_record(stream_, std::move(record));
+    write_record(stream_, std::move(record));
 }
 
 void WAL::write_record(std::ostream& out, WALRecord record) {
